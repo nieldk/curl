@@ -259,6 +259,24 @@ static CURLcode sendrecv_dl(struct Curl_easy *data,
   if(result)
     goto out;
 
+  /*
+  Fix for empty zero-file: SFTP: downloading an empty file on a reused connection results in CURLE_TOO_MANY_REDIRECTS
+  */
+
+  if (data->req.size == 0 && data->req.bytecount == 0) {
+  /* Handle zero-byte file: trigger write callback with 0 bytes */
+  result = Curl_xfer_write_resp(data, NULL, 0, TRUE);
+  if (result) {
+    Curl_multi_xfer_buf_release(data, xfer_buf);
+    return result;
+  }
+
+  data->req.keepon &= ~KEEP_RECV;
+  *didwhat |= KEEP_RECV;
+  Curl_multi_xfer_buf_release(data, xfer_buf);
+  return CURLE_OK;
+  }
+
   /* This is where we loop until we have read everything there is to
      read or we get a CURLE_AGAIN */
   do {
