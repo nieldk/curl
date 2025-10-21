@@ -272,7 +272,7 @@ static CURLcode sendrecv_dl(struct Curl_easy *data,
   }
   int didwhat = 0;
   data->req.keepon &= ~KEEP_RECV;
-  *didwhat |= KEEP_RECV;
+  didwhat |= KEEP_RECV;
   Curl_multi_xfer_buf_release(data, xfer_buf);
   return CURLE_OK;
   }
